@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MirrorIQ
 
-## Getting Started
+**See what works on you before you commit.**
 
-First, run the development server:
+MirrorIQ is a hackathon prototype for the YouCam API Skin AI & Apparel VTO Hackathon.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+It combines:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- YouCam Skin AI analysis
+- YouCam Apparel Virtual Try-On
+- a transparent MirrorIQ Match Score
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+into one decision-making experience.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Problem
 
-## Learn More
+Online fashion shopping forces people to guess whether a look will actually work for them.
 
-To learn more about Next.js, take a look at the following resources:
+MirrorIQ turns that guess into an interactive decision.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Core Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Upload a photo.
+2. Analyze the photo with YouCam Skin AI.
+3. Choose an occasion and style preference.
+4. Select 1 to 3 garments.
+5. Generate apparel try-on previews.
+6. Compare looks side-by-side.
+7. See a deterministic MirrorIQ Match Score.
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Browser  
+→ Next.js API routes  
+→ YouCam API adapter  
+→ YouCam API  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The browser never receives the YouCam API key.
+
+Key directories:
+
+```txt
+app/api/skin          Skin analysis route
+app/api/vto           Apparel VTO submit route
+app/api/vto/status    Apparel VTO status route
+lib/youcam            YouCam integration layer
+lib/scoring           MirrorIQ Match Score
+data/garments         Local garment catalog
+public/garments       Placeholder garment assets
