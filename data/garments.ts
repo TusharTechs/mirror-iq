@@ -14,7 +14,7 @@ export const garments: Garment[] = [
     id: "cream-knit",
     name: "Cream Knit",
     category: "Minimal",
-    image: "/garments/placeholder.svg",
+    image: "/garments/test-garment.jpeg",
     styleTags: ["Minimal", "Classic"],
     occasionTags: ["Everyday", "Date Night"],
   },

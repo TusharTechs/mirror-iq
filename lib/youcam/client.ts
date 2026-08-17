@@ -87,7 +87,13 @@ export async function youcamRequest(
   const cfg = getConfig();
 
   const url = new URL(pathname, cfg.baseUrl).toString();
-  const headers = buildHeaders(cfg);
+  // Merge auth headers with caller-provided headers (e.g. Content-Type).
+  // Caller headers were previously dropped, which made fetch default a
+  // string body to text/plain and YouCam reject with 415.
+  const headers: Record<string, string> = {
+    ...buildHeaders(cfg),
+    ...((init.headers as Record<string, string> | undefined) ?? {}),
+  };
 
   try {
     const res = await fetchWithTimeout(

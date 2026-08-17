@@ -1,67 +1,43 @@
-# YouCam Live Integration Checklist
+# YouCam Live Integration Verification Form (Prototype 0.2)
 
-Before setting `DEMO_MODE=false`, verify from the official YouCam hackathon documentation:
+Legend: VERIFIED | REPORTED-PLAYGROUND | NOT VERIFIED
 
-## Authentication
+## 0. Official references
+- Doc portal URL: __________
+- Skin API doc page: __________
+- Clothes VTO doc page: __________
+- Playground URL: __________
+- Verbatim excerpts: docs/youcam-official-excerpts.md (create when pasted)
 
-- [ ] Base URL
-- [ ] API key header format
-  - `Authorization: Bearer ...`
-  - or `x-api-key: ...`
-  - or another documented format
+## A. Authentication — NOT VERIFIED
+- Key format: __________
+- Header name + exact syntax: __________ (playground report: API-key authorization; syntax unverified)
+- Extra token step: __________
+- Same mechanism for Skin + VTO: __________
 
-## Skin Analysis
+## B. Skin Analysis — NOT VERIFIED
+- Endpoint + method: __________
+- Content type / upload mechanism: __________
+- Image field name: __________
+- Parameter to limit categories (minimum useful set): __________
+- Sync vs async: __________ ; task id field: __________ ; status endpoint: __________
+- Success response sample: __________
+- Error response sample: __________
+- Returned skin fields + value representation: __________
+- Units per call: __________
 
-- [ ] Skin endpoint path
-- [ ] HTTP method
-- [ ] Request content type
-  - multipart/form-data
-  - JSON base64
-  - other
-- [ ] Image field name
-- [ ] Required image constraints
-- [ ] Response shape
-  - skin type
-  - radiance
-  - redness
-  - texture
-  - moisture/hydration
-  - or other supported fields
+## C. Clothes VTO — NOT VERIFIED
+- Submit endpoint + method: __________
+- Person photo field / requirements: __________
+- Garment image field / requirements / category param: __________
+- Sync vs async: __________ ; task id field: __________ ; status endpoint template: __________
+- Result image format (URL/base64/binary): __________
+- Failure response sample: __________
+- Units per call: __________
+- REPORTED-PLAYGROUND (pending doc check): JPEG/PNG ≤10 MB; min 512×384; long side ≤4096 px.
+- App policy: keep 4 MB cap; reject invalid input client-side before spending units.
 
-Update:
-
-- `.env.local`
-- `lib/youcam/config.ts`
-- `lib/youcam/normalize.ts`
-
-## Apparel VTO
-
-- [ ] VTO submit endpoint path
-- [ ] HTTP method
-- [ ] Person image field name
-- [ ] Garment image field name
-- [ ] Whether VTO is synchronous or asynchronous
-- [ ] Job/task/request id field name
-- [ ] Status endpoint path template
-- [ ] Status values
-- [ ] Result image field
-  - URL
-  - base64
-  - binary image
-- [ ] Rate limits
-- [ ] Timeout guidance
-- [ ] Supported garment image formats
-
-Update:
-
-- `.env.local`
-- `lib/youcam/config.ts`
-- `lib/youcam/normalize.ts`
-- `lib/youcam/vto.ts` if the official flow differs materially
-
-## Credit Safety
-
-- [ ] `DEMO_MODE=true` while developing UI
-- [ ] Only switch to live after endpoint verification
-- [ ] Test with one photo and one garment first
-- [ ] Log the number of units consumed after each live test
+## D. Live test log
+- Skin call: NOT RUN
+- VTO call: NOT RUN
+- Units consumed: 0

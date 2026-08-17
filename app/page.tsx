@@ -7,11 +7,11 @@ import type { Garment } from "@/data/garments";
 import { matchScore } from "@/lib/scoring/matchScore";
 import type { Occasion, StylePreference } from "@/lib/scoring/matchScore";
 import type { SkinProfile, TryOnResult } from "@/lib/types";
+import { IMAGE_LIMITS } from "@/lib/images/limits";
+import { CameraCapture } from "@/app/components/CameraCapture";
 
 const occasions: Occasion[] = ["Everyday", "Work", "Date Night", "Party"];
 const styles: StylePreference[] = ["Minimal", "Street", "Classic"];
-
-const MAX_FILE_MB = 4;
 
 type Step =
   | "landing"
@@ -58,10 +58,41 @@ function abortableSleep(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+function checkImageDimensions(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+
+      if (w < IMAGE_LIMITS.minWidth || h < IMAGE_LIMITS.minHeight) {
+        resolve(
+          `Photo must be at least ${IMAGE_LIMITS.minWidth}×${IMAGE_LIMITS.minHeight}px.`
+        );
+      } else if (Math.max(w, h) > IMAGE_LIMITS.maxLongSide) {
+        resolve(`Photo long side must be ${IMAGE_LIMITS.maxLongSide}px or less.`);
+      } else {
+        resolve(null);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve("Could not read image dimensions.");
+    };
+
+    img.src = url;
+  });
+}
+
 export default function Home() {
   const [step, setStep] = useState<Step>("landing");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const [skinProfile, setSkinProfile] = useState<SkinProfile | null>(null);
 
@@ -114,27 +145,29 @@ export default function Home() {
   const failedLooks = results.filter((item) => item.status === "failed");
 
   function validatePhoto(file: File): string | null {
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
+    if (!(IMAGE_LIMITS.acceptedTypes as readonly string[]).includes(file.type)) {
       return "Please choose a JPG or PNG photo.";
     }
 
-    if (file.size > MAX_FILE_MB * 1024 * 1024) {
-      return `Photo must be under ${MAX_FILE_MB}MB.`;
+    if (file.size > IMAGE_LIMITS.maxBytes) {
+      return `Photo must be under ${IMAGE_LIMITS.maxBytes / 1024 / 1024}MB.`;
     }
 
     return null;
   }
 
-  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) return;
-
+  async function applyPhoto(file: File) {
     const validation = validatePhoto(file);
 
     if (validation) {
       setError(validation);
+      return;
+    }
+
+    const dimensionError = await checkImageDimensions(file);
+
+    if (dimensionError) {
+      setError(dimensionError);
       return;
     }
 
@@ -146,6 +179,20 @@ export default function Home() {
     }
 
     setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  async function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    await applyPhoto(file);
+  }
+
+  async function onCameraCapture(file: File) {
+    setCameraOpen(false);
+    await applyPhoto(file);
   }
 
   function removePhoto() {
@@ -450,6 +497,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
+      <CameraCapture
+        open={cameraOpen}
+        onCapture={onCameraCapture}
+        onClose={() => setCameraOpen(false)}
+      />
+
       <div className="mx-auto max-w-5xl space-y-6 p-6">
         <header className="flex items-center justify-between">
           <div>
@@ -496,12 +549,27 @@ export default function Home() {
           <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
             <h2 className="text-lg font-medium">Start with a photo.</h2>
 
-            <input
-              type="file"
-              accept="image/jpeg,image/png"
-              onChange={onFileChange}
-              className="block text-sm text-zinc-300"
-            />
+            <button
+              onClick={() => setCameraOpen(true)}
+              className="rounded bg-white px-4 py-2 text-sm font-medium text-black"
+            >
+              Take a selfie
+            </button>
+
+            <div className="space-y-1">
+              <p className="text-xs text-zinc-500">
+                Or upload an existing photo. For best results, your face
+                should fill most of the frame and face the camera directly —
+                photos that don&apos;t meet this may fail analysis.
+              </p>
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={onFileChange}
+                className="block text-sm text-zinc-300"
+              />
+            </div>
 
             {previewUrl && (
               <div className="space-y-3">

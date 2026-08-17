@@ -7,17 +7,14 @@ export type YouCamConfig = {
   timeoutMs: number;
 
   skinPath: string;
-  skinImageField: string;
+  skinStatusPathTemplate: string;
 
   vtoSubmitPath: string;
   vtoStatusPathTemplate: string;
-  vtoPersonImageField: string;
-  vtoGarmentImageField: string;
 };
 
 function required(name: string): string {
   const value = process.env[name];
-
   if (!value) {
     throw new YouCamApiError({
       code: "config_missing",
@@ -25,7 +22,6 @@ function required(name: string): string {
       retryable: false,
     });
   }
-
   return value;
 }
 
@@ -47,13 +43,9 @@ export function getConfig(): YouCamConfig {
     timeoutMs,
 
     skinPath: required("YOUCAM_SKIN_PATH"),
-    skinImageField: process.env.YOUCAM_SKIN_IMAGE_FIELD || "image",
+    skinStatusPathTemplate: required("YOUCAM_SKIN_STATUS_PATH_TEMPLATE"),
 
     vtoSubmitPath: required("YOUCAM_VTO_SUBMIT_PATH"),
     vtoStatusPathTemplate: required("YOUCAM_VTO_STATUS_PATH_TEMPLATE"),
-    vtoPersonImageField:
-      process.env.YOUCAM_VTO_PERSON_IMAGE_FIELD || "personImage",
-    vtoGarmentImageField:
-      process.env.YOUCAM_VTO_GARMENT_IMAGE_FIELD || "garmentImage",
   };
 }
