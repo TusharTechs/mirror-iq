@@ -314,9 +314,11 @@ export function LookLabStep({
         </div>
       )}
 
-      <PrimaryButton onClick={onReset} fullWidthOnMobile={false}>
-        Try another combination
-      </PrimaryButton>
+      <div className="flex justify-center">
+        <PrimaryButton onClick={onReset}>
+          Try another combination
+        </PrimaryButton>
+      </div>
     </section>
   );
 }
