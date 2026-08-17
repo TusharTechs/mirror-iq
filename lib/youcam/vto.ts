@@ -17,6 +17,8 @@ export async function submitApparelTryOn(
 ): Promise<TryOnResult> {
   const cfg = getConfig();
 
+  // ROBUST PATH: Upload BOTH images to YouCam S3 to get file_ids.
+  // This avoids "error_download_image" errors from public URLs.
   const personFileId = await uploadToYouCam(
     input.personImage,
     input.personMimeType,
