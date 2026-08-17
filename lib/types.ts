@@ -1,11 +1,3 @@
-export type SkinProfile = {
-  skinType?: string;
-  radiance?: number;
-  redness?: number;
-  texture?: number;
-  moisture?: number;
-};
-
 export type TryOnStatus = "processing" | "completed" | "failed";
 
 export type TryOnResult = {

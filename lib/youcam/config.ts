@@ -5,10 +5,6 @@ export type YouCamConfig = {
   apiKey: string;
   authStyle: "bearer" | "x-api-key";
   timeoutMs: number;
-
-  skinPath: string;
-  skinStatusPathTemplate: string;
-
   vtoSubmitPath: string;
   vtoStatusPathTemplate: string;
 };
@@ -41,10 +37,6 @@ export function getConfig(): YouCamConfig {
     apiKey: required("YOUCAM_API_KEY"),
     authStyle,
     timeoutMs,
-
-    skinPath: required("YOUCAM_SKIN_PATH"),
-    skinStatusPathTemplate: required("YOUCAM_SKIN_STATUS_PATH_TEMPLATE"),
-
     vtoSubmitPath: required("YOUCAM_VTO_SUBMIT_PATH"),
     vtoStatusPathTemplate: required("YOUCAM_VTO_STATUS_PATH_TEMPLATE"),
   };

@@ -5,7 +5,6 @@ import { submitApparelTryOn } from "@/lib/youcam/vto";
 import { demoTryOnResult } from "@/lib/youcam/demo";
 import { isFile, validateImageFile, validateImageDimensions } from "@/lib/api/validation";
 import { errorResponse } from "@/lib/api/respond";
-import { logServer } from "@/lib/log";
 import { VTO_IMAGE_LIMITS } from "@/lib/images/limits";
 
 export const runtime = "nodejs";

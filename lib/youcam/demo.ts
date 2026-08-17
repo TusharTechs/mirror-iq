@@ -1,18 +1,10 @@
-import type { SkinProfile, TryOnResult } from "../types";
+import type { TryOnResult } from "../types";
 
 function randomId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 }
-
-export const demoSkinProfile: SkinProfile = {
-  skinType: "combination",
-  radiance: 72,
-  redness: 18,
-  texture: 34,
-  moisture: 61,
-};
 
 export function demoLookImage(label: string): string {
   const svg = `

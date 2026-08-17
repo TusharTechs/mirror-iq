@@ -1,4 +1,4 @@
-import type { SkinProfile, TryOnResult } from "../types";
+import type { TryOnResult } from "../types";
 import { YouCamApiError } from "./errors";
 
 // Verified official envelope:
@@ -26,67 +26,6 @@ function errorMessageOf(data: Record<string, unknown>): string {
 export function extractTaskId(raw: unknown): string | undefined {
   const data = dataOf(raw);
   return typeof data.task_id === "string" ? data.task_id : undefined;
-}
-
-export type SkinPollOutcome =
-  | { status: "running" }
-  | { status: "failed"; error: string }
-  | { status: "success"; profile: SkinProfile };
-
-export function normalizeSkinPoll(raw: unknown): SkinPollOutcome {
-  const data = dataOf(raw);
-  const taskStatus =
-    typeof data.task_status === "string" ? data.task_status : undefined;
-  const errorMessage = errorMessageOf(data);
-
-  if (taskStatus === "success" && !errorMessage) {
-    const results = isRecord(data.results) ? data.results : {};
-    const scoreInfo = isRecord(results.score_info) ? results.score_info : {};
-
-    const uiScore = (key: string): number | undefined => {
-      const entry = scoreInfo[key];
-      return isRecord(entry) && typeof entry.ui_score === "number"
-        ? entry.ui_score
-        : undefined;
-    };
-
-    let skinType: string | undefined;
-    const skinTypeEntry = scoreInfo.hd_skin_type;
-    if (typeof skinTypeEntry === "string") {
-      skinType = skinTypeEntry;
-    } else if (isRecord(skinTypeEntry)) {
-      for (const region of ["whole", "t_zone", "u_zone"]) {
-        const regionValue = skinTypeEntry[region];
-        if (typeof regionValue === "string") {
-          skinType = regionValue;
-          break;
-        }
-      }
-    }
-
-    return {
-      status: "success",
-      profile: {
-        skinType,
-        radiance: uiScore("hd_radiance"),
-        redness: uiScore("hd_redness"),
-        texture: uiScore("hd_texture"),
-        moisture: uiScore("hd_moisture"),
-      },
-    };
-  }
-
-  if (taskStatus === "running" && !errorMessage) {
-    return { status: "running" };
-  }
-
-  // "error", "failed", or unexpected status → fail fast with API message.
-  return {
-    status: "failed",
-    error:
-      errorMessage ||
-      `YouCam skin task did not complete (status: ${taskStatus ?? "unknown"}).`,
-  };
 }
 
 export function normalizeVtoSubmission(

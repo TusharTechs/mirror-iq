@@ -54,34 +54,55 @@ function abortableSleep(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
-function checkImageDimensions(file: File): Promise<string | null> {
+function readImageDimensions(file: File): Promise<{ width: number; height: number } | null> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      if (w < IMAGE_LIMITS.minWidth || h < IMAGE_LIMITS.minHeight) {
-        resolve(`Photo must be at least ${IMAGE_LIMITS.minWidth}×${IMAGE_LIMITS.minHeight}px.`);
-      } else if (Math.max(w, h) > IMAGE_LIMITS.maxLongSide) {
-        resolve(`Photo long side must be ${IMAGE_LIMITS.maxLongSide}px or less.`);
-      } else {
-        resolve(null);
-      }
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      resolve("Could not read image dimensions.");
+      resolve(null);
     };
     img.src = url;
   });
+}
+
+function checkImageDimensions(dimensions: { width: number; height: number }): string | null {
+  const { width: w, height: h } = dimensions;
+  if (w < IMAGE_LIMITS.minWidth || h < IMAGE_LIMITS.minHeight) {
+    return `Photo must be at least ${IMAGE_LIMITS.minWidth}×${IMAGE_LIMITS.minHeight}px.`;
+  }
+  if (Math.max(w, h) > IMAGE_LIMITS.maxLongSide) {
+    return `Photo long side must be ${IMAGE_LIMITS.maxLongSide}px or less.`;
+  }
+  return null;
+}
+
+// Soft heuristic only — we can't actually detect pose/framing client-side.
+// Flags shapes that are very unlikely to be a proper chest-up, shoulders-
+// visible photo (YouCam's error_pose requirement), without hard-blocking.
+function checkFramingHeuristic(dimensions: { width: number; height: number }): string | null {
+  const ratio = dimensions.height / dimensions.width;
+
+  if (ratio < 1.05) {
+    return "This photo looks square or wide. VTO works best with an upright, upper-body photo with your shoulders visible — a tight face close-up or a landscape photo is likely to fail.";
+  }
+
+  if (ratio > 2.2) {
+    return "This photo is unusually tall and narrow. Make sure it's a chest-up crop showing your shoulders, not a full-body or cropped strip photo.";
+  }
+
+  return null;
 }
 
 export default function Home() {
   const [step, setStep] = useState<Step>("landing");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [framingWarning, setFramingWarning] = useState<string | null>(null);
 
   const [occasion, setOccasion] = useState<Occasion | null>(null);
   const [stylePreference, setStylePreference] = useState<StylePreference | null>(null);
@@ -130,11 +151,18 @@ export default function Home() {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+
     const validation = validatePhoto(file);
     if (validation) { setError(validation); return; }
-    const dimensionError = await checkImageDimensions(file);
+
+    const dimensions = await readImageDimensions(file);
+    if (!dimensions) { setError("Could not read image dimensions."); return; }
+
+    const dimensionError = checkImageDimensions(dimensions);
     if (dimensionError) { setError(dimensionError); return; }
+
     setError(null);
+    setFramingWarning(checkFramingHeuristic(dimensions));
     setPhotoFile(file);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
@@ -145,6 +173,7 @@ export default function Home() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPhotoFile(null);
     setPreviewUrl(null);
+    setFramingWarning(null);
     setResults([]);
     setError(null);
     setStep("upload");
@@ -278,6 +307,7 @@ export default function Home() {
     setStep("landing");
     setPhotoFile(null);
     setPreviewUrl(null);
+    setFramingWarning(null);
     setOccasion(null);
     setStylePreference(null);
     setSelectedGarments([]);
@@ -307,7 +337,7 @@ export default function Home() {
 
         {step === "landing" && (
           <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-xl font-medium">Compare the looks you're considering before you buy.</h2>
+            <h2 className="text-xl font-medium">Compare the looks you&apos;re considering before you buy.</h2>
             <p className="text-sm text-zinc-400">
               Upload one photo, select your top choices, and see them on yourself instantly.
             </p>
@@ -323,9 +353,44 @@ export default function Home() {
         {step === "upload" && (
           <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
             <h2 className="text-lg font-medium">Show us your look</h2>
-            <p className="text-sm text-zinc-400">
-              Upload a clear, front-facing photo with your shoulders visible.
-            </p>
+
+            <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
+              <div className="mx-auto w-36 shrink-0 sm:mx-0">
+                <svg
+                  viewBox="0 0 160 200"
+                  className="w-36 rounded-lg border border-zinc-700 bg-zinc-900"
+                  role="img"
+                  aria-label="Example: upper body photo, facing forward, shoulders visible"
+                >
+                  <rect x="4" y="4" width="152" height="192" rx="8" fill="none" stroke="#3f3f46" strokeWidth="2" />
+                  <circle cx="80" cy="68" r="26" fill="#52525b" />
+                  <path
+                    d="M 35 108 Q 35 100 45 100 L 115 100 Q 125 100 125 108 L 118 190 L 42 190 Z"
+                    fill="#52525b"
+                  />
+                  <line x1="4" y1="100" x2="156" y2="100" stroke="#34d399" strokeWidth="1.5" strokeDasharray="4 3" />
+                  <text x="80" y="115" textAnchor="middle" fontSize="9" fill="#34d399">
+                    shoulders visible
+                  </text>
+                </svg>
+                <p className="mt-2 text-center text-xs text-zinc-500">Example framing</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-zinc-400">
+                  For the best try-on results, your photo should be:
+                </p>
+                <ul className="list-disc space-y-1 pl-4 text-sm text-zinc-300">
+                  <li>Just you — no one else in frame</li>
+                  <li>Upper body from the chest up, with your shoulders visible (not a tight face close-up)</li>
+                  <li>Face fully visible, nothing covering it</li>
+                  <li>Standing and facing the camera directly</li>
+                  <li>Taken against a plain, uncluttered background</li>
+                  <li>Well-lit, without harsh shadows</li>
+                </ul>
+              </div>
+            </div>
+
             <input
               type="file"
               accept="image/jpeg,image/png"
@@ -335,6 +400,13 @@ export default function Home() {
             {previewUrl && (
               <div className="space-y-3">
                 <img src={previewUrl} alt="Uploaded preview" className="max-h-80 rounded-lg border border-zinc-800 object-contain" />
+
+                {framingWarning && (
+                  <div className="rounded border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+                    {framingWarning} You can still continue, but it may fail try-on.
+                  </div>
+                )}
+
                 <button onClick={removePhoto} className="rounded border border-zinc-700 px-3 py-1 text-sm">
                   Remove photo
                 </button>
