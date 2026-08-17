@@ -1,49 +1,49 @@
 # MirrorIQ
 
-**See what works on you before you commit.**
+**Stop guessing. See what works.**
 
-MirrorIQ is a hackathon prototype for the YouCam API Skin AI & Apparel VTO Hackathon.
+MirrorIQ is a visual fashion decision engine that helps shoppers compare the clothes they are considering on themselves before committing to a purchase.
 
-It combines:
+## The Problem
+Online fashion shopping forces people to guess whether a look will actually work for them. Standard virtual try-on tools generate one image at a time, leaving the user to mentally compare options.
 
-- YouCam Skin AI analysis
-- YouCam Apparel Virtual Try-On
-- a transparent MirrorIQ Match Score
+## The Solution
+MirrorIQ lets a user upload ONE photo, select an occasion and style preference, choose 1–3 garments they are considering, and instantly see them all on themselves side-by-side. It then calculates a transparent "Match Score" to recommend the strongest option.
 
-into one decision-making experience.
+**YouCam VTO = visualization engine**
+**MirrorIQ = decision engine**
 
-## Problem
+## User Flow
+1. **Upload:** One clear, front-facing photo with shoulders visible.
+2. **Intent:** Select an occasion (Everyday, Work, Date Night, Party) and style (Minimal, Street, Classic).
+3. **Choices:** Select up to 3 garments from a curated catalog.
+4. **Look Lab:** See generated virtual try-on results side-by-side.
+5. **Decision:** View the MirrorIQ Match Score and recommendation.
 
-Online fashion shopping forces people to guess whether a look will actually work for them.
+## YouCam Apparel VTO Integration
+MirrorIQ integrates **Perfect Corp. YouCam Apparel Virtual Try-On (V4)**.
 
-MirrorIQ turns that guess into an interactive decision.
+### Server-Side Architecture
+All YouCam API interactions are handled server-side via Next.js API routes (`/api/vto`, `/api/vto/status`). The API key never reaches the browser.
 
-## Core Flow
+### Why `src_file_id` and Presigned Uploads?
+While the YouCam API documentation mentions `src_file_url`, their servers cannot reliably fetch from arbitrary public URLs due to hotlink protection and CDN restrictions (resulting in `error_download_image`). 
 
-1. Upload a photo.
-2. Analyze the photo with YouCam Skin AI.
-3. Choose an occasion and style preference.
-4. Select 1 to 3 garments.
-5. Generate apparel try-on previews.
-6. Compare looks side-by-side.
-7. See a deterministic MirrorIQ Match Score.
+To ensure 100% reliability, MirrorIQ implements the official **presigned S3 upload flow**:
+1. `POST /s2s/v2.0/file` to get a presigned PUT URL and `file_id`.
+2. `PUT` the binary image directly to Amazon S3.
+3. Submit the VTO task using `src_file_id` and `ref_file_id`.
 
-## Architecture
+## Match Score
+The **MirrorIQ Match Score** is a deterministic, transparent heuristic calculated by MirrorIQ (NOT by YouCam). It is based on:
+- Style preference compatibility
+- Occasion compatibility
+- Garment style tags
 
-Browser  
-→ Next.js API routes  
-→ YouCam API adapter  
-→ YouCam API  
+It is an experimental product feature to help users articulate why a look works. It makes no scientific, medical, or objective attractiveness claims.
 
-The browser never receives the YouCam API key.
+## Environment Setup & DEMO_MODE
 
-Key directories:
-
-```txt
-app/api/skin          Skin analysis route
-app/api/vto           Apparel VTO submit route
-app/api/vto/status    Apparel VTO status route
-lib/youcam            YouCam integration layer
-lib/scoring           MirrorIQ Match Score
-data/garments         Local garment catalog
-public/garments       Placeholder garment assets
+Copy `.env.example` to `.env.local`:
+```bash
+cp .env.example .env.local
