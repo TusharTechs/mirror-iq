@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 224 48" role="img" aria-labelledby="t">
+  <title id="t">MirrorIQ</title>
+  <path fill="#0A0A0A" d="M6 40 L6 8 L13 8 L22.8 23.1 L22.8 31 L20.5 31 L13 19.5 L13 40 Z"/>
+  <path fill="#059669" d="M42 40 L42 8 L35 8 L25.2 23.1 L25.2 31 L27.5 31 L35 19.5 L35 40 Z"/>
+  <text x="60" y="32" font-family="Fraunces, Georgia, 'Times New Roman', serif" font-size="23" font-weight="600" letter-spacing="0.2" fill="#0A0A0A">Mirror<tspan fill="#059669">IQ</tspan></text>
+</svg>

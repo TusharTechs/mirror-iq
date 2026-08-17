@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useMemo, useRef, useState } from "react";
@@ -8,6 +7,12 @@ import { matchScore } from "@/lib/scoring/matchScore";
 import type { Occasion, StylePreference } from "@/lib/scoring/matchScore";
 import type { TryOnResult } from "@/lib/types";
 import { IMAGE_LIMITS } from "@/lib/images/limits";
+import { Landing } from "./components/screens/Landing";
+import { PhotoStep } from "./components/screens/PhotoStep";
+import { ChoiceStep } from "./components/screens/ChoiceStep";
+import { GarmentStep } from "./components/screens/GarmentStep";
+import { GeneratingStep } from "./components/screens/GeneratingStep";
+import { LookLabStep } from "./components/screens/LookLabStep";
 
 const occasions: Occasion[] = ["Everyday", "Work", "Date Night", "Party"];
 const styles: StylePreference[] = ["Minimal", "Street", "Classic"];
@@ -240,7 +245,7 @@ export default function Home() {
     const res = await fetch("/api/vto", { method: "POST", body: formData, signal });
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error?.message ?? "Try-on failed.");
-    
+
     setDemo(Boolean(data.demo));
     const result: TryOnResult = data.result;
 
@@ -318,278 +323,95 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="mx-auto max-w-5xl space-y-6 p-6">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">MirrorIQ</h1>
-            <p className="text-sm text-zinc-400">Stop guessing. See what works.</p>
-          </div>
+      <div className="mx-auto max-w-5xl space-y-6 px-4 pt-safe pb-10 sm:p-6">
+        <header className="flex items-center justify-between py-3">
+          <button
+            onClick={resetAll}
+            className="font-[family-name:var(--font-display)] text-xl font-medium tracking-tight text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded"
+          >
+            MirrorIQ
+          </button>
           {demo && (
-            <span className="rounded-full border border-yellow-500/40 bg-yellow-500/10 px-3 py-1 text-xs text-yellow-200">
-              DEMO_MODE active
+            <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
+              DEMO_MODE
             </span>
           )}
         </header>
 
         {error && (
-          <div className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>
+          <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3.5 text-sm text-red-200">
+            {error}
+          </div>
         )}
 
-        {step === "landing" && (
-          <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-xl font-medium">Compare the looks you&apos;re considering before you buy.</h2>
-            <p className="text-sm text-zinc-400">
-              Upload one photo, select your top choices, and see them on yourself instantly.
-            </p>
-            <button
-              className="rounded bg-white px-4 py-2 font-medium text-black disabled:opacity-50"
-              onClick={() => setStep("upload")}
-            >
-              Try MirrorIQ
-            </button>
-          </section>
-        )}
+        {step === "landing" && <Landing onStart={() => setStep("upload")} />}
 
         {step === "upload" && (
-          <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-lg font-medium">Show us your look</h2>
-
-            <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
-              <div className="mx-auto w-36 shrink-0 sm:mx-0">
-                <svg
-                  viewBox="0 0 160 200"
-                  className="w-36 rounded-lg border border-zinc-700 bg-zinc-900"
-                  role="img"
-                  aria-label="Example: upper body photo, facing forward, shoulders visible"
-                >
-                  <rect x="4" y="4" width="152" height="192" rx="8" fill="none" stroke="#3f3f46" strokeWidth="2" />
-                  <circle cx="80" cy="68" r="26" fill="#52525b" />
-                  <path
-                    d="M 35 108 Q 35 100 45 100 L 115 100 Q 125 100 125 108 L 118 190 L 42 190 Z"
-                    fill="#52525b"
-                  />
-                  <line x1="4" y1="100" x2="156" y2="100" stroke="#34d399" strokeWidth="1.5" strokeDasharray="4 3" />
-                  <text x="80" y="115" textAnchor="middle" fontSize="9" fill="#34d399">
-                    shoulders visible
-                  </text>
-                </svg>
-                <p className="mt-2 text-center text-xs text-zinc-500">Example framing</p>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm text-zinc-400">
-                  For the best try-on results, your photo should be:
-                </p>
-                <ul className="list-disc space-y-1 pl-4 text-sm text-zinc-300">
-                  <li>Just you — no one else in frame</li>
-                  <li>Upper body from the chest up, with your shoulders visible (not a tight face close-up)</li>
-                  <li>Face fully visible, nothing covering it</li>
-                  <li>Standing and facing the camera directly</li>
-                  <li>Taken against a plain, uncluttered background</li>
-                  <li>Well-lit, without harsh shadows</li>
-                </ul>
-              </div>
-            </div>
-
-            <input
-              type="file"
-              accept="image/jpeg,image/png"
-              onChange={onFileChange}
-              className="block text-sm text-zinc-300"
-            />
-            {previewUrl && (
-              <div className="space-y-3">
-                <img src={previewUrl} alt="Uploaded preview" className="max-h-80 rounded-lg border border-zinc-800 object-contain" />
-
-                {framingWarning && (
-                  <div className="rounded border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
-                    {framingWarning} You can still continue, but it may fail try-on.
-                  </div>
-                )}
-
-                <button onClick={removePhoto} className="rounded border border-zinc-700 px-3 py-1 text-sm">
-                  Remove photo
-                </button>
-              </div>
-            )}
-            <button
-              onClick={handleContinueToOccasion}
-              disabled={!photoFile || busy}
-              className="rounded bg-white px-4 py-2 font-medium text-black disabled:opacity-50"
-            >
-              Continue
-            </button>
-          </section>
+          <PhotoStep
+            previewUrl={previewUrl}
+            framingWarning={framingWarning}
+            busy={busy}
+            photoFile={photoFile}
+            onFileChange={onFileChange}
+            onRemove={removePhoto}
+            onContinue={handleContinueToOccasion}
+          />
         )}
 
         {step === "occasion" && (
-          <section className="space-y-6 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-lg font-medium">What are you dressing for?</h2>
-            <div className="flex flex-wrap gap-2">
-              {occasions.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setOccasion(item)}
-                  className={`rounded border px-3 py-2 text-sm ${
-                    occasion === item ? "border-white bg-white text-black" : "border-zinc-700 text-zinc-300"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setStep("style")}
-              disabled={!occasion}
-              className="rounded bg-white px-4 py-2 font-medium text-black disabled:opacity-50"
-            >
-              Continue
-            </button>
-          </section>
+          <ChoiceStep
+            step="occasion"
+            title="What are you dressing for?"
+            options={occasions}
+            selected={occasion}
+            onSelect={setOccasion}
+            onContinue={() => setStep("style")}
+          />
         )}
 
         {step === "style" && (
-          <section className="space-y-6 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-lg font-medium">What feels most like you?</h2>
-            <div className="flex flex-wrap gap-2">
-              {styles.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setStylePreference(item)}
-                  className={`rounded border px-3 py-2 text-sm ${
-                    stylePreference === item ? "border-white bg-white text-black" : "border-zinc-700 text-zinc-300"
-                  }`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setStep("garments")}
-              disabled={!stylePreference}
-              className="rounded bg-white px-4 py-2 font-medium text-black disabled:opacity-50"
-            >
-              Continue
-            </button>
-          </section>
+          <ChoiceStep
+            step="style"
+            title="What's your style?"
+            options={styles}
+            selected={stylePreference}
+            onSelect={setStylePreference}
+            onContinue={() => setStep("garments")}
+          />
         )}
 
         {step === "garments" && (
-          <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-lg font-medium">What are you considering?</h2>
-            <p className="text-sm text-zinc-400">Select up to 3 garments to compare.</p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {garments.map((garment) => {
-                const selected = selectedGarments.includes(garment.id);
-                return (
-                  <button
-                    key={garment.id}
-                    onClick={() => toggleGarment(garment.id)}
-                    className={`space-y-2 rounded-xl border p-3 text-left ${
-                      selected ? "border-white" : "border-zinc-800 hover:border-zinc-600"
-                    }`}
-                  >
-                    <img src={garment.image} alt={garment.name} className="h-32 w-full rounded-lg object-cover" />
-                    <div>
-                      <div className="font-medium">{garment.name}</div>
-                      <div className="text-xs text-zinc-500">{garment.category}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={handleGenerate}
-              disabled={selectedGarments.length === 0 || busy}
-              className="rounded bg-white px-4 py-2 font-medium text-black disabled:opacity-50"
-            >
-              See My Looks
-            </button>
-          </section>
+          <GarmentStep
+            garments={garments}
+            selectedGarments={selectedGarments}
+            onToggle={toggleGarment}
+            onContinue={handleGenerate}
+            busy={busy}
+          />
         )}
 
         {step === "tryon" && (
-          <section className="space-y-4 rounded-xl border border-zinc-800 p-6">
-            <h2 className="text-lg font-medium">Preparing your looks…</h2>
-            <div className="space-y-3">
-              {results.map((result) => {
-                const garment = garments.find((item) => item.id === result.garmentId);
-                return (
-                  <div key={result.garmentId} className="rounded-lg border border-zinc-800 p-3">
-                    <div className="font-medium">{garment?.name ?? result.garmentId}</div>
-                    <div className="text-sm text-zinc-400">{result.stage ?? result.status}</div>
-                    {result.error && <div className="mt-1 text-sm text-red-300">{result.error}</div>}
-                  </div>
-                );
-              })}
-            </div>
-            <button onClick={handleCancel} disabled={!busy} className="rounded border border-zinc-700 px-4 py-2 disabled:opacity-50">
-              Cancel
-            </button>
-          </section>
+          <GeneratingStep
+            results={results}
+            garments={garments}
+            busy={busy}
+            onCancel={handleCancel}
+          />
         )}
 
         {step === "results" && (
-          <section className="space-y-6 rounded-xl border border-zinc-800 p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium">Look Lab</h2>
-              <button onClick={resetAll} className="rounded border border-zinc-700 px-3 py-1 text-sm">
-                Start over
-              </button>
-            </div>
-
-            {bestLook && (
-              <div className="rounded-xl border border-emerald-400 bg-emerald-400/5 p-4 space-y-2">
-                <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">MirrorIQ Recommends</div>
-                <div className="text-xl font-bold">{bestLook.garment.name}</div>
-                <div className="text-sm text-zinc-300">
-                  Best match for your <span className="font-medium">{occasion}</span> + <span className="font-medium">{stylePreference}</span> intent.
-                </div>
-                <div className="text-3xl font-bold text-emerald-400 mt-2">{bestLook.score.overall} MATCH</div>
-              </div>
-            )}
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {scoredLooks.map((look) => (
-                <div key={look.garment.id} className="space-y-3 rounded-xl border border-zinc-800 p-3">
-                  {look.imageUrl && (
-                    <img src={look.imageUrl} alt={`Generated look with ${look.garment.name}`} className="h-64 w-full rounded-lg object-cover" />
-                  )}
-                  <div>
-                    <div className="font-medium">{look.garment.name}</div>
-                    <div className="text-xs text-zinc-500">MirrorIQ Match Score: {look.score.overall}</div>
-                  </div>
-                  <ul className="list-disc space-y-1 pl-4 text-xs text-zinc-400">
-                    {look.score.reasons.map((reason) => (
-                      <li key={reason}>{reason}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            {failedLooks.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-red-200">Failed looks</h3>
-                {failedLooks.map((look) => {
-                  const garment = garments.find((item) => item.id === look.garmentId);
-                  return (
-                    <div key={look.garmentId} className="rounded-lg border border-red-500/30 bg-red-500/10 p-3">
-                      <div className="font-medium">{garment?.name ?? look.garmentId}</div>
-                      <div className="text-sm text-red-200">{look.error ?? "Try-on failed."}</div>
-                      <button
-                        onClick={() => retryGarment(look.garmentId)}
-                        disabled={busy}
-                        className="mt-2 rounded border border-red-300/40 px-3 py-1 text-sm disabled:opacity-50"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+          <LookLabStep
+            demo={demo}
+            garments={garments}
+            scoredLooks={scoredLooks}
+            bestLook={bestLook}
+            failedLooks={failedLooks}
+            occasion={occasion}
+            stylePreference={stylePreference}
+            busy={busy}
+            onRetry={retryGarment}
+            onReset={resetAll}
+          />
         )}
       </div>
     </main>

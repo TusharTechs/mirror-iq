@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">MirrorIQ app icon</title>
+  <rect width="512" height="512" rx="115" fill="#09090B"/>
+  <g transform="translate(128 128) scale(5.3333)">
+    <path fill="#F4F1EA" d="M6 40 L6 8 L13 8 L22.8 23.1 L22.8 31 L20.5 31 L13 19.5 L13 40 Z"/>
+    <path fill="#34D399" d="M42 40 L42 8 L35 8 L25.2 23.1 L25.2 31 L27.5 31 L35 19.5 L35 40 Z"/>
+  </g>
+</svg>
