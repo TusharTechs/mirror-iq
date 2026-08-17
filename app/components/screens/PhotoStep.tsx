@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import type { ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
+import { supportsCameraCapture } from "@/lib/device";
 import { CheckItem, GhostButton, PrimaryButton, ScreenShell, SectionHeading } from "../ui";
 
 // Original illustration (not a photo of a real person) — safe to use as a
@@ -47,6 +48,57 @@ function FramingGuidance() {
   );
 }
 
+function UploadActions({
+  showCamera,
+  onFileChange,
+}: {
+  showCamera: boolean;
+  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {showCamera && (
+        <label className="w-full">
+          <span className="inline-flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 text-base font-semibold text-zinc-950 transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none">
+            Take a photo
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png"
+            capture="user"
+            onChange={onFileChange}
+            className="sr-only"
+            aria-label="Take a photo with your camera"
+          />
+        </label>
+      )}
+
+      <label className="w-full">
+        <span
+          className={
+            showCamera
+              ? "inline-flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-zinc-700 px-8 text-base font-semibold text-zinc-200 transition-colors duration-150 hover:border-zinc-500 hover:text-white"
+              : "inline-flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 text-base font-semibold text-zinc-950 transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none"
+          }
+        >
+          Choose from gallery
+        </span>
+        <input
+          type="file"
+          accept="image/jpeg,image/png"
+          onChange={onFileChange}
+          className="sr-only"
+          aria-label="Choose a photo from your device"
+        />
+      </label>
+
+      <p className="text-center text-[11px] text-zinc-600 sm:text-left">
+        Try-on powered by YouCam Apparel VTO.
+      </p>
+    </div>
+  );
+}
+
 export function PhotoStep({
   previewUrl,
   framingWarning,
@@ -64,6 +116,75 @@ export function PhotoStep({
   onRemove: () => void;
   onContinue: () => void;
 }) {
+  // Lazy-init runs once, client-side only — this component never exists in
+  // server-rendered HTML (it only mounts after a client navigation), so
+  // there's no hydration mismatch to worry about here.
+  const [showCamera] = useState(supportsCameraCapture);
+
+  if (previewUrl) {
+    // Confirmation state. We only surface the one signal the app actually
+    // infers — the aspect-ratio framing heuristic — never per-item claims
+    // like "face detected" or "single person" that nothing here verifies.
+    return (
+      <ScreenShell step="upload">
+        <div className="mx-auto max-w-lg space-y-5">
+          <SectionHeading title="Your photo" />
+
+          <div className="motion-safe:animate-pop overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
+            <img
+              src={previewUrl}
+              alt="Your uploaded photo"
+              className="mx-auto max-h-[28rem] w-full object-contain"
+            />
+          </div>
+
+          {framingWarning ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+                <div className="text-sm font-semibold text-amber-200">Almost ready</div>
+                <p className="mt-1 text-sm text-amber-200/80">{framingWarning}</p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <GhostButton onClick={onRemove} className="sm:flex-1">
+                  Replace photo
+                </GhostButton>
+                <PrimaryButton
+                  onClick={onContinue}
+                  disabled={!photoFile || busy}
+                  className="sm:flex-1"
+                >
+                  Use anyway
+                </PrimaryButton>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-base font-medium text-emerald-300">
+                <span
+                  aria-hidden="true"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400/15 text-xs font-bold text-emerald-400"
+                >
+                  ✓
+                </span>
+                Try-on ready
+              </div>
+
+              <GhostButton onClick={onRemove}>Replace photo</GhostButton>
+
+              <p className="text-sm text-zinc-400">Ready to see yourself in it?</p>
+
+              <PrimaryButton onClick={onContinue} disabled={!photoFile || busy}>
+                Continue
+                <span aria-hidden="true">→</span>
+              </PrimaryButton>
+            </div>
+          )}
+        </div>
+      </ScreenShell>
+    );
+  }
+
   return (
     <ScreenShell step="upload">
       <div className="grid gap-6 sm:grid-cols-2 sm:items-start">
@@ -73,71 +194,10 @@ export function PhotoStep({
             subtitle="One photo is all we need. Face forward, shoulders visible, and you're ready to try on."
           />
 
-          {!previewUrl && (
-            <div className="flex flex-col gap-3">
-              <label className="w-full">
-                <span className="inline-flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-white px-8 text-base font-semibold text-zinc-950 transition-transform duration-150 active:scale-[0.97] motion-reduce:transition-none">
-                  Take a photo
-                </span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  capture="user"
-                  onChange={onFileChange}
-                  className="sr-only"
-                  aria-label="Take a photo with your camera"
-                />
-              </label>
-
-              <label className="w-full">
-                <span className="inline-flex min-h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-zinc-700 px-8 text-base font-semibold text-zinc-200 transition-colors duration-150 hover:border-zinc-500 hover:text-white">
-                  Choose from gallery
-                </span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  onChange={onFileChange}
-                  className="sr-only"
-                  aria-label="Choose a photo from your device"
-                />
-              </label>
-
-              <p className="text-center text-[11px] text-zinc-600 sm:text-left">
-                Try-on powered by YouCam Apparel VTO.
-              </p>
-            </div>
-          )}
-
-          {previewUrl && (
-            <div className="motion-safe:animate-pop space-y-3">
-              <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900">
-                <img
-                  src={previewUrl}
-                  alt="Your uploaded photo"
-                  className="mx-auto max-h-96 w-full object-contain"
-                />
-              </div>
-
-              {framingWarning && (
-                <div
-                  role="status"
-                  className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200"
-                >
-                  {framingWarning} You can still continue, but it may fail try-on.
-                </div>
-              )}
-
-              <GhostButton onClick={onRemove}>Remove photo</GhostButton>
-
-              <PrimaryButton onClick={onContinue} disabled={!photoFile || busy}>
-                Continue
-                <span aria-hidden="true">→</span>
-              </PrimaryButton>
-            </div>
-          )}
+          <UploadActions showCamera={showCamera} onFileChange={onFileChange} />
         </div>
 
-        {!previewUrl && <FramingGuidance />}
+        <FramingGuidance />
       </div>
     </ScreenShell>
   );

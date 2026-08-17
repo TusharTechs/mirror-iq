@@ -55,6 +55,32 @@ export function GhostButton({
   );
 }
 
+// Brand mark: a geometric "M" split into two mirrored halves by a vertical
+// mirror line — the self on the left, the chosen reflection (emerald) on the
+// right. Source: public/brand/mirroriq-symbol.svg. Inlined (not <img>) so its
+// "self" half can inherit surrounding text color via currentColor.
+// Always paired with a visible "MirrorIQ" text label at every call site, so
+// it's marked decorative here to avoid double-announcing the name to
+// screen readers.
+export function MirrorMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      aria-hidden="true"
+      className={cx("shrink-0", className)}
+    >
+      <path
+        fill="currentColor"
+        d="M6 40 L6 8 L13 8 L22.8 23.1 L22.8 31 L20.5 31 L13 19.5 L13 40 Z"
+      />
+      <path
+        fill="#34D399"
+        d="M42 40 L42 8 L35 8 L25.2 23.1 L25.2 31 L27.5 31 L35 19.5 L35 40 Z"
+      />
+    </svg>
+  );
+}
+
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400">
@@ -99,7 +125,7 @@ const FLOW_STEPS = [
   { key: "occasion", label: "Occasion" },
   { key: "style", label: "Style" },
   { key: "garments", label: "Garments" },
-  { key: "tryon", label: "Looks" },
+  { key: "results", label: "Looks" },
 ] as const;
 
 export type FlowStepKey = (typeof FLOW_STEPS)[number]["key"];

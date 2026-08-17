@@ -11,8 +11,8 @@ import { Landing } from "./components/screens/Landing";
 import { PhotoStep } from "./components/screens/PhotoStep";
 import { ChoiceStep } from "./components/screens/ChoiceStep";
 import { GarmentStep } from "./components/screens/GarmentStep";
-import { GeneratingStep } from "./components/screens/GeneratingStep";
 import { LookLabStep } from "./components/screens/LookLabStep";
+import { MirrorMark } from "./components/ui";
 
 const occasions: Occasion[] = ["Everyday", "Work", "Date Night", "Party"];
 const styles: StylePreference[] = ["Minimal", "Street", "Classic"];
@@ -23,7 +23,6 @@ type Step =
   | "occasion"
   | "style"
   | "garments"
-  | "tryon"
   | "results";
 
 type LookUi = TryOnResult & {
@@ -261,7 +260,7 @@ export default function Home() {
     if (!photoFile || selectedGarments.length === 0 || busy) return;
     setBusy(true);
     setError(null);
-    setStep("tryon");
+    setStep("results");
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -277,7 +276,6 @@ export default function Home() {
         patchResult(garmentId, { status: "failed", error: err instanceof Error ? err.message : "Try-on failed.", stage: "Failed" });
       }
     }
-    if (!controller.signal.aborted) setStep("results");
     setBusy(false);
     abortRef.current = null;
   }
@@ -327,9 +325,12 @@ export default function Home() {
         <header className="flex items-center justify-between py-3">
           <button
             onClick={resetAll}
-            className="font-[family-name:var(--font-display)] text-xl font-medium tracking-tight text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded"
+            className="flex items-center gap-2 rounded text-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           >
-            MirrorIQ
+            <MirrorMark className="h-6 w-6" />
+            <span className="font-[family-name:var(--font-display)] text-xl font-medium tracking-tight">
+              MirrorIQ
+            </span>
           </button>
           {demo && (
             <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
@@ -383,6 +384,8 @@ export default function Home() {
         {step === "garments" && (
           <GarmentStep
             garments={garments}
+            occasion={occasion}
+            stylePreference={stylePreference}
             selectedGarments={selectedGarments}
             onToggle={toggleGarment}
             onContinue={handleGenerate}
@@ -390,19 +393,12 @@ export default function Home() {
           />
         )}
 
-        {step === "tryon" && (
-          <GeneratingStep
-            results={results}
-            garments={garments}
-            busy={busy}
-            onCancel={handleCancel}
-          />
-        )}
-
         {step === "results" && (
           <LookLabStep
             demo={demo}
             garments={garments}
+            results={results}
+            selectedGarments={selectedGarments}
             scoredLooks={scoredLooks}
             bestLook={bestLook}
             failedLooks={failedLooks}
@@ -411,6 +407,7 @@ export default function Home() {
             busy={busy}
             onRetry={retryGarment}
             onReset={resetAll}
+            onCancel={handleCancel}
           />
         )}
       </div>
