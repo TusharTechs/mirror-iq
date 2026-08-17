@@ -4,8 +4,6 @@
 
 MirrorIQ is a visual fashion decision engine that helps shoppers compare the clothes they are considering on themselves before committing to a purchase.
 
-Built for the **YouCam API Skin AI & Apparel VTO Hackathon** — Apparel VTO track.
-
 <p align="center">
   <img src=".github/screenshots/01-landing.png" width="800" alt="MirrorIQ landing screen" />
 </p>
@@ -110,7 +108,7 @@ It's an experimental product feature to help users articulate *why* a look works
 - **Next.js 16** (App Router, Turbopack) + **React 19** + **TypeScript**
 - **Tailwind CSS v4**
 - **Fraunces** (display serif) + **Geist** (UI sans), via `next/font`
-- No database, no auth, no additional third-party APIs — kept deliberately minimal for a focused hackathon scope
+- No database, no auth, no additional third-party APIs — kept deliberately minimal and focused
 
 ---
 
@@ -151,7 +149,7 @@ Then edit `.env.local`:
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). With `DEMO_MODE=true` (the default), the entire flow — photo, intent, garments, generation, and Look Lab — works immediately with no API key needed, which is the fastest way for judges to review the product end to end.
+Open [http://localhost:3000](http://localhost:3000). With `DEMO_MODE=true` (the default), the entire flow — photo, intent, garments, generation, and Look Lab — works immediately with no API key needed, which is the fastest way to review the product end to end.
 
 **No photo handy?** `public/test-persons/test-man.png` and `test-woman.png` are AI-generated sample photos (not real people) included specifically so reviewers can try the full upload → try-on flow without needing their own picture.
 
